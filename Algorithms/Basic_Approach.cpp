@@ -3,23 +3,23 @@ using namespace std;
 int x[10000], y[10000];
 int n;
 vector <int> g[10000];
-bool vis[10000];
+bool visited[10000];
 bool indep[10000];
-int Maximal_Independent_Set, counter;
+int maximalIndependentSet, counter;
 void independent(int v){
-    vis[v] = true;
+    visited[v] = true;
     indep[v] = true;
     counter++;
-    Maximal_Independent_Set = max(Maximal_Independent_Set, counter);
-    for(int i=0; i<g[v].size(); i++){
+    maximalIndependentSet = max(maximalIndependentSet, counter);
+    for(int i=0; i<n; i++){
         int u = g[v][i];
-        if(!vis[u]){
-            vis[u] = true;
+        if(!visited[u]){
+            visited[u] = true;
             indep[u] = false;
         }
     }
     for(int j=v+1; j<n; j++){
-        if(!vis[j]){
+        if(!visited[j]){
             independent(j);
         }
     }
@@ -46,9 +46,9 @@ int main(){
         }
     }
     counter =0;
-    Maximal_Independent_Set = 0;
+    maximalIndependentSet = 0;
     independent(0);
-    cout<<"Maximal Independent Set: "<<Maximal_Independent_Set<<endl;
+    cout<<"Maximal Independent Set: "<<maximalIndependentSet<<endl;
 
     
 }
