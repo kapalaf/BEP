@@ -1,67 +1,84 @@
+#include "Basic_Seperators.h"
 #include <bits/stdc++.h>
+
 using namespace std;
 
-typedef pair<int,int> Pt;
+namespace {
 
-bool conflict(const Pt& a, const Pt& b) {
-    int dx = a.first - b.first, dy = a.second - b.second;
-    if (dx * dx + dy * dy <= 4.0){
-        return true;
-    } else {
-        return false;
-    }
+typedef pair<int, int> Pt;
+
+bool conflict(const Pt& a, const Pt& b, int r) {
+    long long dx = a.first - b.first;
+    long long dy = a.second - b.second;
+
+    return dx * dx + dy * dy <= 4 * r * r;
 }
 
-bool onSeparator(const Pt& p, int s) {
-    return abs(p.first - s) <= 1;
+bool onSeparator(const Pt& p, int s, int r) {
+    return abs(p.first - s) <= r;
 }
 
-vector<Pt> solve(const vector<Pt>& pts, int lo, int hi);
+vector<Pt> solve(const vector<Pt>& pts, int r, int a, int b);
 
-void enumerate(const vector<Pt>& sep, int idx, vector<Pt>& chosen, const vector<Pt>& left, const vector<Pt>& right, int lo, int hi, int s, vector<Pt>& best);
+void enumerate(const vector<Pt>& sep, int idx,
+               vector<Pt>& chosen,
+               const vector<Pt>& left,
+               const vector<Pt>& right,
+               vector<Pt>& best,
+               int r, int a, int b, int s) {
 
-void enumerate(const vector<Pt>& sep, int idx, vector<Pt>& chosen, const vector<Pt>& left, const vector<Pt>& right, int lo, int hi, int s, vector<Pt>& best) {
     if (idx == sep.size()) {
         vector<Pt> L, R;
-        for (int i = 0; i < left.size(); i++) {
+
+        for (const Pt& p : left) {
             bool ok = true;
-            for (int j = 0; j < chosen.size(); j++) {
-                if (conflict(left[i], chosen[j])) {
+
+            for (const Pt& c : chosen) {
+                if (conflict(p, c, r)) {
                     ok = false;
                     break;
                 }
             }
-            if (ok) L.push_back(left[i]);
+
+            if (ok) L.push_back(p);
         }
-        for (int i = 0; i < right.size(); i++) {
+
+        for (const Pt& p : right) {
             bool ok = true;
-            for (int j = 0; j < chosen.size(); j++) {
-                if (conflict(right[i], chosen[j])) {
+
+            for (const Pt& c : chosen) {
+                if (conflict(p, c, r)) {
                     ok = false;
                     break;
                 }
             }
-            if (ok) R.push_back(right[i]);
+
+            if (ok) R.push_back(p);
         }
-        vector<Pt> resL = solve(L, lo, s - 2);
-        vector<Pt> resR = solve(R, s + 2, hi);
+
+        vector<Pt> resL = solve(L, r, a, s - r - 1);
+        vector<Pt> resR = solve(R, r, s + r + 1, b);
 
         int total = chosen.size() + resL.size() + resR.size();
+
         if (total > best.size()) {
             best = chosen;
             best.insert(best.end(), resL.begin(), resL.end());
             best.insert(best.end(), resR.begin(), resR.end());
         }
+
         return;
     }
 
-    // Option 1: don't include sep[idx]
-    enumerate(sep, idx + 1, chosen, left, right, lo, hi, s, best);
+    // Option 1: exclude current separator point
+    enumerate(sep, idx + 1, chosen,
+              left, right, best, r, a, b, s);
 
-    // Option 2: include sep[idx] (only if it doesn't intersect already chosen ones)
+    // Option 2: include current separator point
     bool ok = true;
-    for (int i=0; i<chosen.size(); i++) {
-        if (conflict(sep[idx], chosen[i])) {
+
+    for (const Pt& p : chosen) {
+        if (conflict(sep[idx], p, r)) {
             ok = false;
             break;
         }
@@ -69,47 +86,61 @@ void enumerate(const vector<Pt>& sep, int idx, vector<Pt>& chosen, const vector<
 
     if (ok) {
         chosen.push_back(sep[idx]);
-        enumerate(sep, idx + 1, chosen, left, right, lo, hi, s, best);
+
+        enumerate(sep, idx + 1, chosen,
+                  left, right, best, r, a, b, s);
+
         chosen.pop_back();
     }
 }
 
-vector<Pt> solve(const vector<Pt>& pts, int lo, int hi) {
-    if (pts.empty() || lo > hi) return {};
+vector<Pt> solve(const vector<Pt>& pts, int r, int a, int b) {
+    if (pts.empty() || a > b) return {};
 
-    int s = (lo + hi) / 2;
+    // Basic separator: midpoint of the current interval
+    int s = a + (b - a) / 2;
+
     vector<Pt> sep, left, right;
-    for (int i=0; i < pts.size(); i++) {
-        if (onSeparator(pts[i], s)) sep.push_back(pts[i]);
-        else if (pts[i].first < s)  left.push_back(pts[i]);   
-        else                   right.push_back(pts[i]);  
+
+    for (const Pt& p : pts) {
+        if (onSeparator(p, s, r)) {
+            sep.push_back(p);
+        }
+        else if (p.first < s) {
+            left.push_back(p);
+        }
+        else {
+            right.push_back(p);
+        }
+    }
+
+    // Base case: avoid infinite recursion
+    if (left.size() == pts.size() || right.size() == pts.size()) {
+        return pts;
     }
 
     vector<Pt> best, chosen;
-    enumerate(sep, 0, chosen, left, right, lo, hi, s, best);
+
+    enumerate(sep, 0, chosen,
+              left, right, best, r, a, b, s);
+
     return best;
 }
 
+}
 
-int main() {
-    int n;
-    cout << "Enter the number of points: ";
-    cin >> n;
-    cout << "Enter the coordinates of the points (x y):" << endl;
+vector<pair<int, int>> Basic_Seperators::solve(
+    const vector<pair<int, int>>& pts, int r) {
 
-    vector<Pt> g(n);
-    for (int i = 0; i < n; i++) {
-        int x, y;
-        cin >> x >> y;
-        g[i] = make_pair(x, y);
-    }
-    sort(g.begin(), g.end());
-    g.erase(unique(g.begin(), g.end()), g.end());   // identical centers = same circle
+    vector<Pt> points = pts;
 
-    vector<Pt> ans = solve(g, 0, 16);
+    sort(points.begin(), points.end());
+    points.erase(unique(points.begin(), points.end()), points.end());
 
-    cout << "Maximum independent set size: " << ans.size() << endl;
-    sort(ans.begin(), ans.end());
-    for (const Pt& p : ans) cout << p.first << " " << p.second << endl;
-    return 0;
+    if (points.empty()) return {};
+
+    int minX = points.front().first;
+    int maxX = points.back().first;
+
+    return ::solve(points, r, minX, maxX);
 }

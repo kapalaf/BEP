@@ -1,0 +1,43 @@
+
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build BEP",
+            "type": "process",
+            "command": "g++",
+            "args": [
+                "-std=c++17",
+                "-Wall",
+                "-Wextra",
+                "-g",
+                "-I${workspaceFolder}",
+                "-I${workspaceFolder}/Algorithms",
+                "-I${workspaceFolder}/Visualization",
+
+                "${workspaceFolder}/Main.cpp",
+
+                "${workspaceFolder}/Algorithms/Basic_Approach.cpp",
+                "${workspaceFolder}/Algorithms/Basic_Seperators.cpp",
+                "${workspaceFolder}/Algorithms/Median_Seperators.cpp",
+                "${workspaceFolder}/Algorithms/Registry.cpp",
+
+                "${workspaceFolder}/Visualization/SgwWriter.cpp",
+                "${workspaceFolder}/Visualization/visualization.cpp",
+
+                "-o",
+                "${workspaceFolder}/output/Main.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

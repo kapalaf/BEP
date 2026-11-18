@@ -1,70 +1,91 @@
+#include "Median_Seperators.h"
 #include <bits/stdc++.h>
+
 using namespace std;
 
-typedef pair<int,int> Pt;
+namespace {
 
-// Circles of radius 1 intersect if the distance between centers is < 2.
-// Set to true if tangent circles (distance == 2) should also count as intersecting.
+typedef pair<int, int> Pt;
 
-bool conflict(const Pt& a, const Pt& b) {
-    int dx = a.first - b.first, dy = a.second - b.second;
-    if (dx * dx + dy * dy <= 4.0){
+bool conflict(const Pt& a, const Pt& b, int r) {
+    int dx = a.first - b.first;
+    int dy = a.second - b.second;
+
+    if (dx * dx + dy * dy <= 4*r*r) {
         return true;
     } else {
         return false;
     }
 }
 
-bool onSeparator(const Pt& p, int s) {
-    return abs(p.first - s) <= 1;
+bool onSeparator(const Pt& p, int s, int r) {
+    return abs(p.first - s) <= r;
 }
 
-vector<Pt> solve(const vector<Pt>& pts, int lo, int hi);
+int median(const vector<Pt>& pts) {
+    return pts[pts.size() / 2].first;
+}
 
-void enumerate(const vector<Pt>& sep, int idx, vector<Pt>& chosen, const vector<Pt>& left, const vector<Pt>& right, int lo, int hi, int s, vector<Pt>& best);
+vector<Pt> solve(const vector<Pt>& pts, int r);
 
-void enumerate(const vector<Pt>& sep, int idx, vector<Pt>& chosen, const vector<Pt>& left, const vector<Pt>& right, int lo, int hi, int s, vector<Pt>& best) {
+void enumerate(const vector<Pt>& sep, int idx,
+               vector<Pt>& chosen,
+               const vector<Pt>& left,
+               const vector<Pt>& right,
+               vector<Pt>& best,
+               int r) {
+
     if (idx == sep.size()) {
         vector<Pt> L, R;
+
         for (int i = 0; i < left.size(); i++) {
             bool ok = true;
+
             for (int j = 0; j < chosen.size(); j++) {
-                if (conflict(left[i], chosen[j])) {
+                if (conflict(left[i], chosen[j], r)) {
                     ok = false;
                     break;
                 }
             }
+
             if (ok) L.push_back(left[i]);
         }
+
         for (int i = 0; i < right.size(); i++) {
             bool ok = true;
+
             for (int j = 0; j < chosen.size(); j++) {
-                if (conflict(right[i], chosen[j])) {
+                if (conflict(right[i], chosen[j], r)) {
                     ok = false;
                     break;
                 }
             }
+
             if (ok) R.push_back(right[i]);
         }
-        vector<Pt> resL = solve(L, lo, s - 2);
-        vector<Pt> resR = solve(R, s + 2, hi);
+
+        vector<Pt> resL = solve(L, r);
+        vector<Pt> resR = solve(R, r);
 
         int total = chosen.size() + resL.size() + resR.size();
+
         if (total > best.size()) {
             best = chosen;
             best.insert(best.end(), resL.begin(), resL.end());
             best.insert(best.end(), resR.begin(), resR.end());
         }
+
         return;
     }
 
-    // Option 1: don't include sep[idx]
-    enumerate(sep, idx + 1, chosen, left, right, lo, hi, s, best);
+    // Option 1: exclude the current point
+    enumerate(sep, idx + 1, chosen, left, right, best, r);
 
-    // Option 2: include sep[idx] (only if it doesn't intersect already chosen ones)
+    // Option 2: include the current point
     bool ok = true;
-    for (int i=0; i<chosen.size(); i++) {
-        if (conflict(sep[idx], chosen[i])) {
+
+    for (int i = 0; i < chosen.size(); i++) {
+        if (conflict(sep[idx], chosen[i], r)) {
             ok = false;
             break;
         }
@@ -72,52 +93,48 @@ void enumerate(const vector<Pt>& sep, int idx, vector<Pt>& chosen, const vector<
 
     if (ok) {
         chosen.push_back(sep[idx]);
-        enumerate(sep, idx + 1, chosen, left, right, lo, hi, s, best);
+
+        enumerate(sep, idx + 1, chosen, left, right, best, r);
+
         chosen.pop_back();
     }
 }
 
+vector<Pt> solve(const vector<Pt>& pts, int r) {
+    if (pts.empty()) return {};
 
-int median(const vector<Pt>& pts) {
-    return pts[pts.size() / 2].first;
-}
+    int s = median(pts);
 
-vector<Pt> solve(const vector<Pt>& pts, int lo, int hi) {
-    if (pts.empty() || lo > hi) return {};
-
-    int s = median(pts);    
     vector<Pt> sep, left, right;
+
     for (int i = 0; i < pts.size(); i++) {
-        if (onSeparator(pts[i], s)) sep.push_back(pts[i]);
-        else if (pts[i].first < s)  left.push_back(pts[i]);
-        else                        right.push_back(pts[i]);
+        if (onSeparator(pts[i], s, r)) {
+            sep.push_back(pts[i]);
+        }
+        else if (pts[i].first < s) {
+            left.push_back(pts[i]);
+        }
+        else {
+            right.push_back(pts[i]);
+        }
     }
 
     vector<Pt> best, chosen;
-    enumerate(sep, 0, chosen, left, right, lo, hi, s, best);
+
+    enumerate(sep, 0, chosen, left, right, best, r);
+
     return best;
 }
 
+}
 
-int main() {
-    int n;
-    cout << "Enter the number of points: ";
-    cin >> n;
-    cout << "Enter the coordinates of the points (x y):" << endl;
+vector<pair<int, int>> Median_Seperators::solve(
+    const vector<pair<int, int>>& pts, int r) {
 
-    vector<Pt> g(n);
-    for (int i = 0; i < n; i++) {
-        int x, y;
-        cin >> x >> y;
-        g[i] = make_pair(x, y);
-    }
-    sort(g.begin(), g.end());
-    g.erase(unique(g.begin(), g.end()), g.end());   
+    vector<Pt> points = pts;
 
-    vector<Pt> ans = solve(g, 0, 16);
+    sort(points.begin(), points.end());
+    points.erase(unique(points.begin(), points.end()), points.end());
 
-    cout << "Maximum independent set size: " << ans.size() << endl;
-    sort(ans.begin(), ans.end());
-    for (const Pt& p : ans) cout << p.first << " " << p.second << endl;
-    return 0;
+    return ::solve(points, r);
 }

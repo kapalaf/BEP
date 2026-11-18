@@ -1,54 +1,69 @@
+#include "Basic_Approach.h"
 #include <bits/stdc++.h>
+
 using namespace std;
-int x[10000], y[10000];
-int n;
-vector <int> g[10000];
-bool visited[10000];
-bool indep[10000];
-int maximalIndependentSet, counter;
-void independent(int v){
-    visited[v] = true;
+
+namespace {
+
+int counter;
+int maximalIndependentSet;
+vector<vector<int>> g;
+vector<bool> indep;
+
+void independent(int v, int n, int r) {
     indep[v] = true;
-    counter++;
-    maximalIndependentSet = max(maximalIndependentSet, counter);
-    for(int i=0; i<n; i++){
-        int u = g[v][i];
-        if(!visited[u]){
-            visited[u] = true;
-            indep[u] = false;
+    
+    for(int i=0; i<g[v].size(); i++) {
+        if(indep[g[v][i]]) {
+            indep[v] = false;
+            return;
         }
-    }
-    for(int j=v+1; j<n; j++){
-        if(!visited[j]){
-            independent(j);
-        }
-    }
-    indep[v] = false;
-    counter--;
-    if(v+1 < n){
-        independent(v+1);
     }
 
-}
-int main(){
-    cout<<"Enter the number of points: ";
-    cin>>n;
-    cout<<"Enter the coordinates of the points: "<<endl;
-    for(int i=0; i<n; i++){
-        cin>>x[i]>>y[i];
+
+    counter++;
+    maximalIndependentSet = max(maximalIndependentSet, counter);
+
+
+    for (int j = v + 1; j < n; j++) {
+        independent(j, n, r);
     }
-    for(int i=0; i<n; i++){
-        for(int j=i+1; j<n; j++){
-            if((x[i]-x[j])*(x[i]-x[j])+(y[i]-y[j])*(y[i]-y[j]) <= 4){
+
+    indep[v] = false;
+    counter--;
+
+
+    if (v + 1 < n) {
+        independent(v + 1, n, r);
+    }
+}
+
+} // namespace
+
+int Basic_Approach::solve(const vector<int>& x,
+                          const vector<int>& y, int n, int r) {
+
+    g.assign(n, vector<int>());
+    indep.assign(n, false);
+
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            int dx = x[i] - x[j];
+            int dy = y[i] - y[j];
+
+            if (dx * dx + dy * dy <= 4*r*r) {
                 g[i].push_back(j);
                 g[j].push_back(i);
             }
         }
     }
-    counter =0;
-    maximalIndependentSet = 0;
-    independent(0);
-    cout<<"Maximal Independent Set: "<<maximalIndependentSet<<endl;
 
-    
+    counter = 0;
+    maximalIndependentSet = 0;
+
+    if (n > 0) {
+        independent(0, n, r);
+    }
+
+    return maximalIndependentSet;
 }
