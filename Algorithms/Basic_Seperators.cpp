@@ -12,82 +12,6 @@ typedef pair<int, int> Pt;
 
 vector<Pt> solve(const vector<Pt>& pts, int r, int a, int b);
 
-void enumerate(const vector<Pt>& sep, int idx,
-               vector<Pt>& chosen,
-               const vector<Pt>& left,
-               const vector<Pt>& right,
-               vector<Pt>& best,
-               int r, int a, int b, int s) {
-
-    if (idx == sep.size()) {
-        vector<Pt> L, R;
-
-        for (int i = 0; i < left.size(); i++) {
-            const Pt& p = left[i];
-            bool ok = true;
-
-            for (int i = 0; i < chosen.size(); i++) {
-                if (conflict(p, chosen[i], r)) {
-                    ok = false;
-                    break;
-                }
-            }
-
-            if (ok) L.push_back(p);
-        }
-
-        for (int i = 0; i < right.size(); i++) {
-            const Pt& p = right[i];
-            bool ok = true;
-
-            for (int j = 0; j < chosen.size(); j++) {
-                if (conflict(p, chosen[j], r)) {
-                    ok = false;
-                    break;
-                }
-            }
-
-            if (ok) {R.push_back(p);}
-        }
-
-        vector<Pt> resL = solve(L, r, a, s - r - 1);
-        vector<Pt> resR = solve(R, r, s + r + 1, b);
-
-        int total = chosen.size() + resL.size() + resR.size();
-
-        if (total > best.size()) {
-            best = chosen;
-            best.insert(best.end(), resL.begin(), resL.end());
-            best.insert(best.end(), resR.begin(), resR.end());
-        }
-
-        return;
-    }
-
-    // Option 1: exclude current separator point
-    enumerate(sep, idx + 1, chosen,
-              left, right, best, r, a, b, s);
-
-    // Option 2: include current separator point
-    bool ok = true;
-
-    for (const Pt& p : chosen) {
-        if (conflict(sep[idx], p, r)) {
-            ok = false;
-            break;
-        }
-    }
-
-    if (ok) {
-        chosen.push_back(sep[idx]);
-
-        enumerate(sep, idx + 1, chosen,
-                  left, right, best, r, a, b, s);
-
-        chosen.pop_back();
-    }
-}
-
 vector<Pt> solve(const vector<Pt>& pts, int r, int a, int b) {
     if (pts.empty() || a > b) {return {};}
 
@@ -116,8 +40,10 @@ vector<Pt> solve(const vector<Pt>& pts, int r, int a, int b) {
 
     vector<Pt> best, chosen;
 
-    enumerate(sep, 0, chosen,
-              left, right, best, r, a, b, s);
+    Solver recL = [&](const vector<Pt>& v) { return solve(v, r, a, s - r - 1); };
+    Solver recR = [&](const vector<Pt>& v) { return solve(v, r, s + r + 1, b); };
+
+    enumerate(singletons(sep), 0, chosen, left, right, best, r, recL, recR);
 
     return best;
 }
