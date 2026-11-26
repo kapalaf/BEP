@@ -1,22 +1,14 @@
 #include "Basic_Seperators.h"
+#include "Common.h"
 #include <bits/stdc++.h>
 
 using namespace std;
+using namespace Common;
 
 namespace {
 
 typedef pair<int, int> Pt;
 
-bool conflict(const Pt& a, const Pt& b, int r) {
-    long long dx = a.first - b.first;
-    long long dy = a.second - b.second;
-
-    return dx * dx + dy * dy <= 4 * r * r;
-}
-
-bool onSeparator(const Pt& p, int s, int r) {
-    return abs(p.first - s) <= r;
-}
 
 vector<Pt> solve(const vector<Pt>& pts, int r, int a, int b);
 
@@ -30,11 +22,12 @@ void enumerate(const vector<Pt>& sep, int idx,
     if (idx == sep.size()) {
         vector<Pt> L, R;
 
-        for (const Pt& p : left) {
+        for (int i = 0; i < left.size(); i++) {
+            const Pt& p = left[i];
             bool ok = true;
 
-            for (const Pt& c : chosen) {
-                if (conflict(p, c, r)) {
+            for (int i = 0; i < chosen.size(); i++) {
+                if (conflict(p, chosen[i], r)) {
                     ok = false;
                     break;
                 }
@@ -43,17 +36,18 @@ void enumerate(const vector<Pt>& sep, int idx,
             if (ok) L.push_back(p);
         }
 
-        for (const Pt& p : right) {
+        for (int i = 0; i < right.size(); i++) {
+            const Pt& p = right[i];
             bool ok = true;
 
-            for (const Pt& c : chosen) {
-                if (conflict(p, c, r)) {
+            for (int j = 0; j < chosen.size(); j++) {
+                if (conflict(p, chosen[j], r)) {
                     ok = false;
                     break;
                 }
             }
 
-            if (ok) R.push_back(p);
+            if (ok) {R.push_back(p);}
         }
 
         vector<Pt> resL = solve(L, r, a, s - r - 1);
@@ -95,14 +89,15 @@ void enumerate(const vector<Pt>& sep, int idx,
 }
 
 vector<Pt> solve(const vector<Pt>& pts, int r, int a, int b) {
-    if (pts.empty() || a > b) return {};
+    if (pts.empty() || a > b) {return {};}
 
     // Basic separator: midpoint of the current interval
     int s = a + (b - a) / 2;
 
     vector<Pt> sep, left, right;
 
-    for (const Pt& p : pts) {
+    for (int i = 0; i < pts.size(); i++) {
+        const Pt& p = pts[i];
         if (onSeparator(p, s, r)) {
             sep.push_back(p);
         }
@@ -134,10 +129,8 @@ vector<pair<int, int>> Basic_Seperators::solve(
 
     vector<Pt> points = pts;
 
-    sort(points.begin(), points.end());
-    points.erase(unique(points.begin(), points.end()), points.end());
 
-    if (points.empty()) return {};
+    if (points.empty()) {return {};}
 
     int minX = points.front().first;
     int maxX = points.back().first;

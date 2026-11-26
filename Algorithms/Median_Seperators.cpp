@@ -1,26 +1,14 @@
 #include "Median_Seperators.h"
+#include "Common.h"
 #include <bits/stdc++.h>
 
 using namespace std;
+using namespace Common;
 
 namespace {
 
 typedef pair<int, int> Pt;
 
-bool conflict(const Pt& a, const Pt& b, int r) {
-    int dx = a.first - b.first;
-    int dy = a.second - b.second;
-
-    if (dx * dx + dy * dy <= 4*r*r) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-bool onSeparator(const Pt& p, int s, int r) {
-    return abs(p.first - s) <= r;
-}
 
 int median(const vector<Pt>& pts) {
     return pts[pts.size() / 2].first;
@@ -132,9 +120,6 @@ vector<pair<int, int>> Median_Seperators::solve(
     const vector<pair<int, int>>& pts, int r) {
 
     vector<Pt> points = pts;
-
-    sort(points.begin(), points.end());
-    points.erase(unique(points.begin(), points.end()), points.end());
 
     return ::solve(points, r);
 }

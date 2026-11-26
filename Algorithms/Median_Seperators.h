@@ -1,8 +1,7 @@
 #ifndef MEDIAN_SEPERATORS_H
 #define MEDIAN_SEPERATORS_H
 
-#include <vector>
-#include <utility>
+#include <bits/stdc++.h>
 using namespace std;
 
 class Median_Seperators {

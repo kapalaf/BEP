@@ -2,7 +2,7 @@
 #ifndef BASIC_SEPERATORS_H
 #define BASIC_SEPERATORS_H
 
-#include <vector>
+#include <bits/stdc++.h>
 using namespace std;
 
 class Basic_Seperators {
